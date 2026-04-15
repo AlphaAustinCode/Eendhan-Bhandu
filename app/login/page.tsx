@@ -10,6 +10,8 @@ export default function Login() {
     const router = useRouter();
 
     const handleLogin = async () => {
+        console.log(" FRONTEND LOGIN ATTEMPT:", { phone, password });
+        
         const res = await fetch("http://localhost:5000/login", {
             method: "POST",
             headers: {
@@ -19,6 +21,7 @@ export default function Login() {
         });
 
         const data = await res.json();
+        console.log(" FRONTEND LOGIN RESPONSE:", { status: res.status, data });
 
         if (!res.ok) {
             alert(data.message);
@@ -26,8 +29,9 @@ export default function Login() {
         }
 
         localStorage.setItem("currentUser", JSON.stringify(data.user));
+        console.log(" FRONTEND LOGIN SUCCESS - User stored in localStorage");
 
-        alert("Login Success ✅");
+        alert("Login Success ");
         router.push("/dashboard");
     };
 
