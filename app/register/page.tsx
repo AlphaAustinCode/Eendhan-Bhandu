@@ -30,8 +30,11 @@ export default function Register() {
                 body: JSON.stringify({ passbook }),
             });
 
-            if (!res.ok) {
-                throw new Error();
+            if (res.ok) {
+                // Save user to browser memory so the Dashboard can see it
+                localStorage.setItem("user", JSON.stringify(userData));
+                alert("Registration Successful ✅ Redirecting...");
+                router.push("/login");
             }
 
             const data = await res.json();

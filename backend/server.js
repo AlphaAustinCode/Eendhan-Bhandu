@@ -70,7 +70,6 @@ const gasDatabase = [
 /* =========================
    🔹 Temporary Users Storage
 ========================= */
-// CHANGE THIS: Add a default user inside the brackets
 let users = [
     {
         phone: "9876543210",
@@ -85,17 +84,22 @@ let users = [
 let otpStore = {};
 
 /* =========================
+   ✅ ROOT ROUTE (Added to prevent 404)
+========================= */
+app.get("/", (req, res) => {
+    res.send("<h1>Eendhan-Bhandu Backend is Running!</h1><p>Visit /users to see data.</p>");
+});
+
+/* =========================
    ✅ CHECK PASSBOOK
 ========================= */
 app.post("/check-passbook", (req, res) => {
     const { passbook } = req.body;
-
     const user = gasDatabase.find((u) => u.passbook === passbook);
 
     if (!user) {
         return res.status(404).json({ message: "Passbook not found" });
     }
-
     res.json(user);
 });
 
@@ -104,10 +108,8 @@ app.post("/check-passbook", (req, res) => {
 ========================= */
 app.post("/send-otp", (req, res) => {
     const { phone } = req.body;
-
-    const otp = "1234"; // demo OTP
+    const otp = "1234";
     otpStore[phone] = otp;
-
     res.json({ message: "OTP sent", otp });
 });
 
@@ -116,78 +118,61 @@ app.post("/send-otp", (req, res) => {
 ========================= */
 app.post("/verify-otp", (req, res) => {
     const { phone, otp } = req.body;
-
     if (otpStore[phone] === otp) {
         return res.json({ success: true });
     }
-
     res.status(400).json({ success: false });
 });
 
 /* =========================
-   ✅ REGISTER USER (FIXED)
+   ✅ REGISTER USER
 ========================= */
 app.post("/register", (req, res) => {
-    console.log("🔍 REGISTRATION REQUEST:", req.body);
-
     const user = {
         ...req.body,
         phone: req.body.phone?.trim(),
         password: req.body.password?.trim(),
     };
 
-    console.log("🔍 PROCESSED USER:", user);
-
     const exists = users.find((u) => u.phone === user.phone);
-
     if (exists) {
-        console.log("❌ USER ALREADY EXISTS:", user.phone);
         return res.status(400).json({ message: "User already exists" });
     }
 
     users.push(user);
-
-    console.log("✅ USER REGISTERED SUCCESSFULLY");
-    console.log("📦 ALL USERS:", users);
-
     res.json({ message: "Registered successfully" });
 });
 
 /* =========================
-   ✅ LOGIN USER (FIXED)
+   ✅ LOGIN USER (Safe Version)
 ========================= */
 app.post("/login", (req, res) => {
     const { phone, password } = req.body;
 
-    // --- DEBUG LOGS: Check your terminal after clicking login ---
-    console.log("--- Login Attempt ---");
-    console.log("Terminal Input:", { phone, password });
-    console.log("Current Users in Memory:", users);
+    if (!phone || !password) {
+        return res.status(400).json({ message: "Phone and password are required" });
+    }
 
     const user = users.find((u) => {
-        // Force everything to a trimmed string to avoid comparison errors
+        // Safe string conversion to prevent crashes if data is null/undefined
         const storedPhone = String(u.phone || "").trim();
         const storedPass = String(u.password || "").trim();
         const inputPhone = String(phone || "").trim();
         const inputPass = String(password || "").trim();
-
         return storedPhone === inputPhone && storedPass === inputPass;
     });
 
     if (!user) {
-        console.log("❌ LOGIN FAILED: No match found.");
         return res.status(400).json({ message: "Invalid phone or password" });
     }
-
-    console.log("✅ LOGIN SUCCESS:", user.name || user.phone);
     res.json({ message: "Login successful", user });
 });
+
 /* =========================
    ✅ FORGOT PASSWORD - SEND OTP
 ========================= */
 app.post("/forgot-password/send-otp", (req, res) => {
     const { phone } = req.body;
-
     const user = users.find((u) => u.phone === phone);
 
     if (!user) {
@@ -196,7 +181,6 @@ app.post("/forgot-password/send-otp", (req, res) => {
 
     const otp = "1234";
     otpStore[phone] = otp;
-
     res.json({ message: "OTP sent", otp });
 });
 
@@ -205,7 +189,6 @@ app.post("/forgot-password/send-otp", (req, res) => {
 ========================= */
 app.post("/forgot-password/reset", (req, res) => {
     const { phone, password } = req.body;
-
     const user = users.find((u) => u.phone === phone);
 
     if (!user) {
@@ -213,7 +196,6 @@ app.post("/forgot-password/reset", (req, res) => {
     }
 
     user.password = password;
-
     res.json({ message: "Password updated successfully" });
 });
 
@@ -235,10 +217,6 @@ app.get("/user-history/:phone", (req, res) => {
    ✅ LIST SURPLUS
 ========================= */
 app.post("/list-surplus", (req, res) => {
-    const { phone, location, urgency } = req.body;
-
-    console.log(`New surplus listed by ${phone} at ${location}`);
-
     res.json({
         success: true,
         message: "Cylinder listed successfully!",
@@ -246,8 +224,9 @@ app.post("/list-surplus", (req, res) => {
 });
 
 /* =========================
-   SERVER START
+   SERVER START (Fixed Port)
 ========================= */
-app.listen(5000, () => {
-    console.log("Server running on port 5000");
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
